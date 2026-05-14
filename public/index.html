@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ഗ്രൂപ്പ് തിരഞ്ഞെടുക്കൽ</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:sans-serif;background:#f5f5f5;min-height:100vh;padding:1rem;}
+  .wrap{max-width:420px;margin:0 auto;}
+  h1{font-size:22px;font-weight:600;color:#1a1a1a;margin-bottom:6px;margin-top:0.5rem;}
+  .sub{font-size:15px;color:#666;margin-bottom:1.25rem;line-height:1.6;}
+  .counter{display:flex;gap:8px;margin-bottom:1.25rem;}
+  .cp{flex:1;text-align:center;padding:10px;border-radius:10px;}
+  .cp .n{font-size:22px;font-weight:600;display:block;}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem;}
+  .box{aspect-ratio:1;border-radius:12px;border:2px solid #ddd;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;font-weight:600;color:#333;transition:all 0.15s;-webkit-tap-highlight-color:transparent;}
+  .box:active{transform:scale(0.93);}
+  .box.taken{background:#eee;border-color:#ddd;cursor:not-allowed;color:#bbb;text-decoration:line-through;}
+  .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;padding:1rem;z-index:10;}
+  .overlay.show{display:flex;}
+  .modal{background:#fff;border-radius:16px;padding:1.5rem;width:100%;max-width:340px;}
+  .modal h2{font-size:18px;font-weight:600;margin-bottom:6px;color:#1a1a1a;}
+  .modal p{font-size:14px;color:#666;margin-bottom:1rem;}
+  .modal input{width:100%;padding:13px;font-size:17px;border-radius:10px;border:1.5px solid #ddd;background:#fafafa;color:#1a1a1a;margin-bottom:10px;outline:none;}
+  .modal input:focus{border-color:#D85A30;}
+  .modal button{width:100%;padding:14px;border-radius:10px;background:#D85A30;color:#fff;border:none;font-size:16px;font-weight:600;cursor:pointer;}
+  .result{position:fixed;top:0;left:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;padding:1rem;z-index:20;flex-direction:column;gap:0;}
+  .result.show{display:flex;}
+  .result.rama{background:#FFF3EE;}
+  .result.krishna{background:#E6F1FB;}
+  .result-inner{text-align:center;}
+  .result .pname{font-size:17px;margin-bottom:12px;}
+  .result.rama .pname{color:#993C1D;}
+  .result.krishna .pname{color:#185FA5;}
+  .result .word{font-size:72px;font-weight:700;margin-bottom:10px;}
+  .result.rama .word{color:#712B13;}
+  .result.krishna .word{color:#0C447C;}
+  .result .grp{font-size:18px;margin-bottom:2rem;}
+  .result.rama .grp{color:#993C1D;}
+  .result.krishna .grp{color:#185FA5;}
+  .result .close-btn{padding:14px 32px;border-radius:10px;font-size:16px;font-weight:600;border:none;cursor:pointer;background:rgba(0,0,0,0.12);color:#1a1a1a;}
+  .groups-section{margin-top:0.5rem;}
+  .show-groups-btn{width:100%;padding:14px;border-radius:10px;background:#185FA5;color:#fff;border:none;font-size:16px;font-weight:600;cursor:pointer;display:none;margin-bottom:1rem;}
+  .gcard{border-radius:12px;padding:1rem;margin-bottom:10px;}
+  .gcard.gr{background:#FFF3EE;border:1px solid #F0997B;}
+  .gcard.gk{background:#E6F1FB;border:1px solid #85B7EB;}
+  .gcard h3{font-size:16px;font-weight:600;margin-bottom:8px;}
+  .gcard.gr h3{color:#712B13;}
+  .gcard.gk h3{color:#0C447C;}
+  .mrow{font-size:15px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.07);color:#1a1a1a;}
+  .mrow:last-child{border-bottom:none;}
+  .refresh-btn{width:100%;padding:12px;border-radius:10px;background:#f0f0f0;color:#555;border:none;font-size:14px;cursor:pointer;margin-bottom:1rem;}
+  .done-banner{background:#EAF3DE;border-radius:10px;padding:12px;text-align:center;font-size:15px;color:#27500A;font-weight:600;margin-bottom:1rem;display:none;}
+  .reset-btn{width:100%;padding:12px;border-radius:10px;background:#fff;color:#993C1D;border:1.5px solid #F0997B;font-size:14px;cursor:pointer;margin-top:0.5rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ഗ്രൂപ്പ് തിരഞ്ഞെടുക്കൽ</h1>
+  <p class="sub">ഒരു നമ്പർ tap ചെയ്യുക. നിങ്ങളുടെ ഗ്രൂപ്പ് ഉടൻ അറിയാം.</p>
+
+  <div class="counter">
+    <div class="cp" style="background:#FFF3EE;border:1px solid #F0997B;">
+      <span class="n" id="rc" style="color:#712B13;">0</span>
+      <span style="font-size:13px;color:#993C1D;">രാമ</span>
+    </div>
+    <div class="cp" style="background:#E6F1FB;border:1px solid #85B7EB;">
+      <span class="n" id="kc" style="color:#0C447C;">0</span>
+      <span style="font-size:13px;color:#185FA5;">കൃഷ്ണ</span>
+    </div>
+    <div class="cp" style="background:#f5f5f5;border:1px solid #ddd;">
+      <span class="n" id="lc" style="color:#555;">24</span>
+      <span style="font-size:13px;color:#888;">ബാക്കി</span>
+    </div>
+  </div>
+
+  <button class="refresh-btn" onclick="loadState()">↻ പുതുക്കുക (Refresh)</button>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="done-banner" id="doneBanner">എല്ലാ 24 പേരും ഗ്രൂപ്പ് കണ്ടെത്തി!</div>
+
+  <div class="groups-section">
+    <button class="show-groups-btn" id="showGroupsBtn" onclick="toggleGroups()">ഗ്രൂപ്പ് ലിസ്റ്റ് കാണുക</button>
+    <div id="groupsDiv"></div>
+  </div>
+
+  <button class="reset-btn" onclick="resetAll()">റീസെറ്റ് ചെയ്യുക (Admin only)</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>നിങ്ങളുടെ പേര്</h2>
+    <p>നമ്പർ <strong id="chosenNum"></strong> തിരഞ്ഞെടുത്തു</p>
+    <input id="nameIn" type="text" placeholder="പൂർണ്ണ നാമം..." autocomplete="off"/>
+    <button onclick="confirmPick()">ഉറപ്പിക്കുക ✓</button>
+  </div>
+</div>
+
+<div class="result" id="result">
+  <div class="result-inner">
+    <div class="pname" id="rName"></div>
+    <div class="word" id="rWord"></div>
+    <div class="grp" id="rGrp"></div>
+    <button class="close-btn" onclick="closeResult()">അടയ്ക്കുക</button>
+  </div>
+</div>
+
+<script>
+let pending = -1;
+let takenState = new Array(24).fill(false);
+
+const grid = document.getElementById('grid');
+for(let i = 0; i < 24; i++){
+  const b = document.createElement('div');
+  b.className = 'box';
+  b.id = 'b' + i;
+  b.textContent = i + 1;
+  b.onclick = () => openModal(i);
+  grid.appendChild(b);
+}
+
+async function loadState(){
+  const res = await fetch('/state');
+  const data = await res.json();
+  takenState = data.taken;
+  document.getElementById('rc').textContent = data.ramaCount;
+  document.getElementById('kc').textContent = data.krishnaCount;
+  document.getElementById('lc').textContent = 24 - data.total;
+  for(let i = 0; i < 24; i++){
+    const b = document.getElementById('b' + i);
+    if(data.taken[i]){ b.classList.add('taken'); }
+    else { b.classList.remove('taken'); }
+  }
+  if(data.total === 24){
+    document.getElementById('doneBanner').style.display = 'block';
+    document.getElementById('showGroupsBtn').style.display = 'block';
+  }
+}
+
+function openModal(i){
+  if(takenState[i]) return;
+  pending = i;
+  document.getElementById('chosenNum').textContent = i + 1;
+  document.getElementById('nameIn').value = '';
+  document.getElementById('overlay').classList.add('show');
+  setTimeout(() => document.getElementById('nameIn').focus(), 150);
+}
+
+document.getElementById('nameIn').addEventListener('keydown', e => {
+  if(e.key === 'Enter') confirmPick();
+});
+
+async function confirmPick(){
+  const name = document.getElementById('nameIn').value.trim();
+  if(!name) return;
+  document.getElementById('overlay').classList.remove('show');
+  const res = await fetch('/pick', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ index: pending, name })
+  });
+  const data = await res.json();
+  if(!data.ok){
+    if(data.error === 'taken') alert('ഈ നമ്പർ ആരോ ഇതിനകം തിരഞ്ഞെടുത്തു. മറ്റൊന്ന് തിരഞ്ഞെടുക്കുക.');
+    loadState();
+    return;
+  }
+  const result = document.getElementById('result');
+  const w = data.word;
+  result.className = 'result show ' + (w === 'rama' ? 'rama' : 'krishna');
+  document.getElementById('rName').textContent = data.name;
+  document.getElementById('rWord').textContent = w === 'rama' ? 'രാമ' : 'കൃഷ്ണ';
+  document.getElementById('rGrp').textContent = (w === 'rama' ? 'രാമ' : 'കൃഷ്ണ') + ' ഗ്രൂപ്പ്';
+  loadState();
+}
+
+function closeResult(){
+  document.getElementById('result').classList.remove('show');
+}
+
+async function toggleGroups(){
+  const d = document.getElementById('groupsDiv');
+  const btn = document.getElementById('showGroupsBtn');
+  if(d.innerHTML !== ''){
+    d.innerHTML = '';
+    btn.textContent = 'ഗ്രൂപ്പ് ലിസ്റ്റ് കാണുക';
+    return;
+  }
+  const res = await fetch('/groups');
+  const data = await res.json();
+  d.innerHTML = `
+    <div class="gcard gr"><h3>രാമ ഗ്രൂപ്പ് (${data.rama.length})</h3>${data.rama.map((n,i)=>`<div class="mrow">${i+1}. ${n}</div>`).join('')}</div>
+    <div class="gcard gk"><h3>കൃഷ്ണ ഗ്രൂപ്പ് (${data.krishna.length})</h3>${data.krishna.map((n,i)=>`<div class="mrow">${i+1}. ${n}</div>`).join('')}</div>`;
+  btn.textContent = 'ലിസ്റ്റ് മറയ്ക്കുക';
+}
+
+async function resetAll(){
+  if(!confirm('എല്ലാ ഡേറ്റയും മായ്ക്കണോ?')) return;
+  await fetch('/reset', { method: 'POST' });
+  document.getElementById('groupsDiv').innerHTML = '';
+  document.getElementById('showGroupsBtn').style.display = 'none';
+  document.getElementById('doneBanner').style.display = 'none';
+  loadState();
+}
+
+loadState();
+setInterval(loadState, 5000);
+</script>
+</body>
+</html>
