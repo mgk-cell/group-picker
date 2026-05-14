@@ -86,7 +86,7 @@
     <div id="groupsDiv"></div>
   </div>
 
-  <button class="reset-btn" onclick="resetAll()">റീസെറ്റ് ചെയ്യുക (Admin only)</button>
+ 
 </div>
 
 <div class="overlay" id="overlay">
@@ -194,15 +194,6 @@ async function toggleGroups(){
     <div class="gcard gr"><h3>രാമ ഗ്രൂപ്പ് (${data.rama.length})</h3>${data.rama.map((n,i)=>`<div class="mrow">${i+1}. ${n}</div>`).join('')}</div>
     <div class="gcard gk"><h3>കൃഷ്ണ ഗ്രൂപ്പ് (${data.krishna.length})</h3>${data.krishna.map((n,i)=>`<div class="mrow">${i+1}. ${n}</div>`).join('')}</div>`;
   btn.textContent = 'ലിസ്റ്റ് മറയ്ക്കുക';
-}
-
-async function resetAll(){
-  if(!confirm('എല്ലാ ഡേറ്റയും മായ്ക്കണോ?')) return;
-  await fetch('/reset', { method: 'POST' });
-  document.getElementById('groupsDiv').innerHTML = '';
-  document.getElementById('showGroupsBtn').style.display = 'none';
-  document.getElementById('doneBanner').style.display = 'none';
-  loadState();
 }
 
 loadState();
