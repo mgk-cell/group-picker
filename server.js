@@ -37,14 +37,14 @@ app.get('/groups', (req, res) => {
   res.json({ rama, krishna });
 });
 
-app.post('/reset', (req, res) => {
+app.get('/admin/ibuildthisformom', (req, res) => {
   words = Array(12).fill('rama').concat(Array(12).fill('krishna'));
   for (let i = words.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [words[i], words[j]] = [words[j], words[i]];
   }
   picks = new Array(24).fill(null);
-  res.json({ ok: true });
+  res.send('Reset done. All 24 boxes are fresh.');
 });
 
 app.listen(PORT, () => console.log('Running on port ' + PORT));
