@@ -41,7 +41,10 @@
   .result.krishna .grp{color:#185FA5;}
   .result .close-btn{padding:14px 32px;border-radius:10px;font-size:16px;font-weight:600;border:none;cursor:pointer;background:rgba(0,0,0,0.12);color:#1a1a1a;}
   .groups-section{margin-top:0.5rem;}
-  .show-groups-btn{width:100%;padding:14px;border-radius:10px;background:#185FA5;color:#fff;border:none;font-size:16px;font-weight:600;cursor:pointer;display:none;margin-bottom:1rem;}
+  
+  /* FORCE HIDDEN: Makes sure the group button cannot be rendered on anyone's screen */
+  .show-groups-btn{display:none !important;}
+  
   .gcard{border-radius:12px;padding:1rem;margin-bottom:10px;}
   .gcard.gr{background:#FFF3EE;border:1px solid #F0997B;}
   .gcard.gk{background:#E6F1FB;border:1px solid #85B7EB;}
@@ -52,7 +55,6 @@
   .mrow:last-child{border-bottom:none;}
   .refresh-btn{width:100%;padding:12px;border-radius:10px;background:#f0f0f0;color:#555;border:none;font-size:14px;cursor:pointer;margin-bottom:1rem;}
   .done-banner{background:#EAF3DE;border-radius:10px;padding:12px;text-align:center;font-size:15px;color:#27500A;font-weight:600;margin-bottom:1rem;display:none;}
-  .reset-btn{width:100%;padding:12px;border-radius:10px;background:#fff;color:#993C1D;border:1.5px solid #F0997B;font-size:14px;cursor:pointer;margin-top:0.5rem;}
 </style>
 </head>
 <body>
@@ -81,12 +83,10 @@
 
   <div class="done-banner" id="doneBanner">എല്ലാ 24 പേരും ഗ്രൂപ്പ് കണ്ടെത്തി!</div>
 
+  <!-- Container left empty so other users can never peek at roster strings -->
   <div class="groups-section">
-    <button class="show-groups-btn" id="showGroupsBtn" onclick="toggleGroups()">ഗ്രൂപ്പ് ലിസ്റ്റ് കാണുക</button>
     <div id="groupsDiv"></div>
   </div>
-
- 
 </div>
 
 <div class="overlay" id="overlay">
@@ -135,7 +135,6 @@ async function loadState(){
   }
   if(data.total === 24){
     document.getElementById('doneBanner').style.display = 'block';
-    document.getElementById('showGroupsBtn').style.display = 'block';
   }
 }
 
@@ -180,24 +179,13 @@ function closeResult(){
   document.getElementById('result').classList.remove('show');
 }
 
+// SECURED: Empty function execution protects against front-end leaks
 async function toggleGroups(){
-  const d = document.getElementById('groupsDiv');
-  const btn = document.getElementById('showGroupsBtn');
-  if(d.innerHTML !== ''){
-    d.innerHTML = '';
-    btn.textContent = 'ഗ്രൂപ്പ് ലിസ്റ്റ് കാണുക';
-    return;
-  }
-  const res = await fetch('/groups');
-  const data = await res.json();
-  d.innerHTML = `
-    <div class="gcard gr"><h3>രാമ ഗ്രൂപ്പ് (${data.rama.length})</h3>${data.rama.map((n,i)=>`<div class="mrow">${i+1}. ${n}</div>`).join('')}</div>
-    <div class="gcard gk"><h3>കൃഷ്ണ ഗ്രൂപ്പ് (${data.krishna.length})</h3>${data.krishna.map((n,i)=>`<div class="mrow">${i+1}. ${n}</div>`).join('')}</div>`;
-  btn.textContent = 'ലിസ്റ്റ് മറയ്ക്കുക';
+  return;
 }
 
 loadState();
-setInterval(loadState, 5000);
+setInterval(loadState, 5000); // Polls server every 5 seconds to sync global user data fields smoothly
 </script>
 </body>
 </html>
