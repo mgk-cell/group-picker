@@ -1,30 +1,27 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
+const { Client } = require('pg'); // Pure PostgreSQL client for Supabase cloud storage
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Path pointing to the secure, free Render disk mount folder
-const DATA_FILE = '/data/data.json';
+// Connect to your free Supabase database securely using Render environment variables
+const dbClient = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+});
 
-let state = {
-    total: 0,
-    ramaCount: 0,
-    krishnaCount: 0,
-    taken: new Array(24).fill(false),
-    assignmentPool: [],
-    masterDatabase: new Array(24).fill(null).map((_, i) => ({
-        taken: false,
-        name: "",
-        group: "",
-        range: null,
-        number: i + 1
-    }))
-};
+dbClient.connect()
+    .then(() => {
+        console.log("✓ Connected to Supabase Cloud Database successfully!");
+        return initializeDatabase();
+    })
+    .catch(err => console.error("Database connection error: ", err));
 
+// Helper function to generate a brand new randomized pool
 function generateRandomPool() {
     const dashakamRanges = [
         "1-10", "11-20", "21-30", "31-40", "41-50", 
@@ -43,82 +40,108 @@ function generateRandomPool() {
     return pool;
 }
 
-// Check if the secure data folder exists, read it, or create a fresh pool
-if (fs.existsSync(DATA_FILE)) {
+// Automatically create tables and insert initial state if the database is completely empty
+async function initializeDatabase() {
+    await dbClient.query(`
+        CREATE TABLE IF NOT EXISTS system_state (
+            id SERIAL PRIMARY KEY,
+            total INT DEFAULT 0,
+            rama_count INT DEFAULT 0,
+            krishna_count INT DEFAULT 0,
+            taken BOOLEAN[] DEFAULT '{}',
+            assignment_pool JSONB DEFAULT '[]',
+            master_database JSONB DEFAULT '[]'
+        );
+    `);
+
+    const res = await dbClient.query('SELECT * FROM system_state LIMIT 1;');
+    if (res.rows.length === 0) {
+        const defaultPool = generateRandomPool();
+        const defaultMaster = new Array(24).fill(null).map((_, i) => ({
+            taken: false, name: "", group: "", range: null, number: i + 1
+        }));
+        const defaultTaken = new Array(24).fill(false);
+
+        await dbClient.query(`
+            INSERT INTO system_state (total, rama_count, krishna_count, taken, assignment_pool, master_database)
+            VALUES ($1, $2, $3, $4, $5, $6);
+        `, [0, 0, 0, defaultTaken, JSON.stringify(defaultPool), JSON.stringify(defaultMaster)]);
+        console.log("✓ Initialized default app structure inside Supabase cloud storage!");
+    }
+}
+
+// Fetch live state straight from cloud DB
+async function getState() {
+    const res = await dbClient.query('SELECT * FROM system_state LIMIT 1;');
+    return res.rows[0];
+}
+
+app.get('/state', async (req, res) => {
     try {
-        const rawData = fs.readFileSync(DATA_FILE, 'utf8');
-        state = JSON.parse(rawData);
-        console.log("✓ Saved data restored successfully!");
+        const state = await getState();
+        res.json({ 
+            taken: state.taken, 
+            ramaCount: state.rama_count, 
+            krishnaCount: state.krishna_count, 
+            total: state.total 
+        });
     } catch (e) {
-        console.log("Error reading save file, starting fresh pool.");
-        state.assignmentPool = generateRandomPool();
+        res.status(500).json({ error: e.message });
     }
-} else {
-    state.assignmentPool = generateRandomPool();
-    // Ensure the directory exists before writing to it
-    if (!fs.existsSync('/data')) {
-        fs.mkdirSync('/data', { recursive: true });
-    }
-    fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
-}
-
-function saveToDisk() {
-    if (!fs.existsSync('/data')) {
-        fs.mkdirSync('/data', { recursive: true });
-    }
-    fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
-}
-
-app.get('/state', (req, res) => {
-    res.json({ 
-        taken: state.taken, 
-        ramaCount: state.ramaCount, 
-        krishnaCount: state.krishnaCount, 
-        total: state.total 
-    });
 });
 
-app.post('/pick', (req, res) => {
-    const { index, name } = req.body;
-    
-    if (index < 0 || index >= 24 || state.taken[index]) {
-        return res.status(400).json({ ok: false, error: 'taken' });
+app.post('/pick', async (req, res) => {
+    try {
+        const { index, name } = req.body;
+        const state = await getState();
+        
+        if (index < 0 || index >= 24 || state.taken[index]) {
+            return res.status(400).json({ ok: false, error: 'taken' });
+        }
+
+        const assignment = state.assignment_pool[state.total];
+        state.taken[index] = true;
+        state.total++;
+        
+        if (assignment.group === 'rama') state.rama_count++;
+        if (assignment.group === 'krishna') state.krishna_count++;
+
+        state.master_database[index] = {
+            taken: true,
+            name: name,
+            group: assignment.group,
+            range: assignment.range,
+            number: index + 1
+        };
+
+        // Instantly save choices back to the database cloud row
+        await dbClient.query(`
+            UPDATE system_state 
+            SET total = $1, rama_count = $2, krishna_count = $3, taken = $4, master_database = $5
+            WHERE id = $6;
+        `, [state.total, state.rama_count, state.krishna_count, state.taken, JSON.stringify(state.master_database), state.id]);
+
+        res.json({ 
+            ok: true, 
+            word: assignment.group, 
+            range: assignment.range, 
+            name: name 
+        });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
     }
-
-    const assignment = state.assignmentPool[state.total];
-
-    state.taken[index] = true;
-    state.total++;
-    
-    if (assignment.group === 'rama') state.ramaCount++;
-    if (assignment.group === 'krishna') state.krishnaCount++;
-
-    state.masterDatabase[index] = {
-        taken: true,
-        name: name,
-        group: assignment.group,
-        range: assignment.range,
-        number: index + 1
-    };
-
-    saveToDisk();
-
-    res.json({ 
-        ok: true, 
-        word: assignment.group, 
-        range: assignment.range, 
-        name: name 
-    });
 });
 
-app.get('/groups', (req, res) => {
+// ADMIN VIEW
+app.get('/groups', async (req, res) => {
     const clientSecret = req.query.secret;
     if (clientSecret !== 'myadmin123') {
         return res.status(403).send('<h1>Access Denied</h1>');
     }
 
-    const ramaGroup = state.masterDatabase.filter(p => p.taken && p.group === 'rama');
-    const krishnaGroup = state.masterDatabase.filter(p => p.taken && p.group === 'krishna');
+    const state = await getState();
+    const ramaGroup = state.master_database.filter(p => p.taken && p.group === 'rama');
+    const krishnaGroup = state.master_database.filter(p => p.taken && p.group === 'krishna');
 
     let htmlOutput = `
     <html>
@@ -166,28 +189,27 @@ app.get('/groups', (req, res) => {
     res.send(htmlOutput);
 });
 
-app.get('/reset', (req, res) => {
+// SYSTEM RESET ROUTE
+app.get('/reset', async (req, res) => {
     const clientSecret = req.query.secret;
     if (clientSecret !== 'myadmin123') {
         return res.status(403).send('<h1>Access Denied</h1>');
     }
 
-    state.total = 0;
-    state.ramaCount = 0;
-    state.krishnaCount = 0;
-    state.taken = new Array(24).fill(false);
-    state.assignmentPool = generateRandomPool();
-    state.masterDatabase = new Array(24).fill(null).map((_, i) => ({
-        taken: false,
-        name: "",
-        group: "",
-        range: null,
-        number: i + 1
+    const state = await getState();
+    const defaultPool = generateRandomPool();
+    const defaultMaster = new Array(24).fill(null).map((_, i) => ({
+        taken: false, name: "", group: "", range: null, number: i + 1
     }));
+    const defaultTaken = new Array(24).fill(false);
 
-    saveToDisk();
+    await dbClient.query(`
+        UPDATE system_state 
+        SET total = $1, rama_count = $2, krishna_count = $3, taken = $4, assignment_pool = $5, master_database = $6
+        WHERE id = $7;
+    `, [0, 0, 0, defaultTaken, JSON.stringify(defaultPool), JSON.stringify(defaultMaster), state.id]);
 
-    res.send('<h1>System Reset Successful ✓</h1><p>The saved data file has been completely wiped and randomized freshly.</p><br><a href="/">Go to Home Grid</a>');
+    res.send('<h1>System Reset Successful ✓</h1><p>The database has been wiped clean and randomized freshly.</p><br><a href="/">Go to Home Grid</a>');
 });
 
 app.listen(PORT, () => {
