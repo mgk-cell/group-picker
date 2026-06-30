@@ -25,24 +25,29 @@
   .modal input{width:100%;padding:13px;font-size:17px;border-radius:10px;border:1.5px solid #ddd;background:#fafafa;color:#1a1a1a;margin-bottom:10px;outline:none;}
   .modal input:focus{border-color:#D85A30;}
   .modal button{width:100%;padding:14px;border-radius:10px;background:#D85A30;color:#fff;border:none;font-size:16px;font-weight:600;cursor:pointer;}
+  
+  /* Announcements Page Overlay styling */
   .result{position:fixed;top:0;left:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;padding:1rem;z-index:20;flex-direction:column;gap:0;}
   .result.show{display:flex;}
   .result.rama{background:#FFF3EE;}
   .result.krishna{background:#E6F1FB;}
-  .result-inner{text-align:center;padding:20px;}
-  .result .pname{font-size:18px;margin-bottom:16px;font-weight:600;}
-  .result.rama .pname {color:#993C1D;}
-  .result.krishna .pname {color:#185FA5;}
-  .result .word{font-size:54px;font-weight:700;margin-bottom:5px;}
+  .result-inner{text-align:center;padding:24px;width:100%;max-width:360px;background:rgba(255,255,255,0.85);border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,0.05);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+  .result .pname{font-size:18px;margin-bottom:8px;font-weight:600;color:#444;}
+  .result .word{font-size:48px;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;}
   .result.rama .word{color:#712B13;}
   .result.krishna .word{color:#0C447C;}
-  .result .grp{font-size:20px;margin-bottom:1.5rem;font-weight:600;}
+  .result .grp{font-size:18px;margin-bottom:1.5rem;font-weight:600;opacity:0.85;}
   .result.rama .grp{color:#993C1D;}
   .result.krishna .grp{color:#185FA5;}
-  .result .dashakam-display {font-size:24px;font-weight:700;background:rgba(255,255,255,0.7);padding:15px 25px;border-radius:12px;margin-bottom:2.5rem;border:1px dashed rgba(0,0,0,0.15);}
-  .result.rama .dashakam-display {color:#712B13;}
-  .result.krishna .dashakam-display {color:#0C447C;}
-  .result .close-btn{padding:14px 40px;border-radius:10px;font-size:16px;font-weight:600;border:none;cursor:pointer;background:rgba(0,0,0,0.12);color:#1a1a1a;}
+  
+  /* Prominent Dashakam Badge layout */
+  .result .dashakam-display {font-size:22px;font-weight:800;padding:18px 20px;border-radius:16px;margin-bottom:2rem;border:2px dashed;}
+  .result.rama .dashakam-display {background:#FFF3EE;color:#712B13;border-color:#F0997B;}
+  .result.krishna .dashakam-display {background:#E6F1FB;color:#0C447C;border-color:#85B7EB;}
+  
+  .result .close-btn{width:100%;padding:14px;border-radius:12px;font-size:16px;font-weight:600;border:none;cursor:pointer;background:#1a1a1a;color:#fff;transition:background 0.2s;}
+  .result .close-btn:active{background:#444;}
+  
   .refresh-btn{width:100%;padding:12px;border-radius:10px;background:#f0f0f0;color:#555;border:none;font-size:14px;cursor:pointer;margin-bottom:1rem;}
   .done-banner{background:#EAF3DE;border-radius:10px;padding:12px;text-align:center;font-size:15px;color:#27500A;font-weight:600;margin-bottom:1rem;display:none;}
   .show-groups-btn{display:none !important;}
@@ -84,13 +89,14 @@
   </div>
 </div>
 
+<!-- The Live Announcement Screen Pop-up Container -->
 <div class="result" id="result">
   <div class="result-inner">
     <div class="pname" id="rName"></div>
     <div class="word" id="rWord"></div>
-    <div class="grp" id="rGrp"></div>
-    <div class="dashakam-display" id="rDashakam" style="display:none;"></div>
-    <button class="close-btn" onclick="closeResult()">അടയ്ക്കുക</button>
+    <div class="grp" id="rGrp">വിജയകരമായി തിരഞ്ഞെടുക്കപ്പെട്ടു!</div>
+    <div class="dashakam-display" id="rDashakam"></div>
+    <button class="close-btn" onclick="closeResult()">ശരി (OK)</button>
   </div>
 </div>
 
@@ -156,17 +162,20 @@ async function confirmPick(){
   
   const result = document.getElementById('result');
   const w = data.word;
+  
+  // Apply targeted thematic branding color layouts instantly
   result.className = 'result show ' + (w === 'rama' ? 'rama' : 'krishna');
   document.getElementById('rName').textContent = data.name;
   document.getElementById('rWord').textContent = w === 'rama' ? 'രാമ ഗ്രൂപ്പ്' : 'കൃഷ്ണ ഗ്രൂപ്പ്';
-  document.getElementById('rGrp').textContent = 'സ്വാഗതം!';
   
-  const dDiv = document.getElementById('rDashakam');
+  const dDisplay = document.getElementById('rDashakam');
   if(data.range) {
-     dDiv.textContent = 'നിങ്ങളുടെ ദശകം: ' + data.range;
-     dDiv.style.display = 'block';
+     // Explicit Announcement View update
+     dDisplay.textContent = 'നിങ്ങളുടെ ദശകം: ' + data.range;
+     dDisplay.style.display = 'block';
   } else {
-     dDiv.style.display = 'none';
+     // Graceful fallback for the 2 extra backup members without layout text gaps
+     dDisplay.style.display = 'none';
   }
   
   loadState();
@@ -181,3 +190,4 @@ setInterval(loadState, 5000);
 </script>
 </body>
 </html>
+
