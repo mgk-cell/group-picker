@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ഗ്രൂപ്പ് തിരഞ്ഞെടുക്കൽ</title>
+<title>ശ്രീ നാരായണീയം ഗ്രൂപ്പ് തിരഞ്ഞെടുക്കൽ</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:sans-serif;background:#f5f5f5;min-height:100vh;padding:1rem;}
   .wrap{max-width:420px;margin:0 auto;}
-  h1{font-size:22px;font-weight:600;color:#1a1a1a;margin-bottom:6px;margin-top:0.5rem;}
-  .sub{font-size:15px;color:#666;margin-bottom:1.25rem;line-height:1.6;}
+  h1{font-size:22px;font-weight:600;color:#1a1a1a;margin-bottom:6px;margin-top:0.5rem;text-align:center;}
+  .sub{font-size:15px;color:#666;margin-bottom:1.25rem;line-height:1.6;text-align:center;}
   .counter{display:flex;gap:8px;margin-bottom:1.25rem;}
   .cp{flex:1;text-align:center;padding:10px;border-radius:10px;}
   .cp .n{font-size:22px;font-weight:600;display:block;}
@@ -29,47 +29,38 @@
   .result.show{display:flex;}
   .result.rama{background:#FFF3EE;}
   .result.krishna{background:#E6F1FB;}
-  .result-inner{text-align:center;}
-  .result .pname{font-size:17px;margin-bottom:12px;}
-  .result.rama .pname{color:#993C1D;}
-  .result.krishna .pname{color:#185FA5;}
-  .result .word{font-size:72px;font-weight:700;margin-bottom:10px;}
+  .result-inner{text-align:center;padding:20px;}
+  .result .pname{font-size:18px;margin-bottom:16px;font-weight:600;}
+  .result.rama .pname {color:#993C1D;}
+  .result.krishna .pname {color:#185FA5;}
+  .result .word{font-size:54px;font-weight:700;margin-bottom:5px;}
   .result.rama .word{color:#712B13;}
   .result.krishna .word{color:#0C447C;}
-  .result .grp{font-size:18px;margin-bottom:2rem;}
+  .result .grp{font-size:20px;margin-bottom:1.5rem;font-weight:600;}
   .result.rama .grp{color:#993C1D;}
   .result.krishna .grp{color:#185FA5;}
-  .result .close-btn{padding:14px 32px;border-radius:10px;font-size:16px;font-weight:600;border:none;cursor:pointer;background:rgba(0,0,0,0.12);color:#1a1a1a;}
-  .groups-section{margin-top:0.5rem;}
-  
-  /* FORCE HIDDEN: Makes sure the group button cannot be rendered on anyone's screen */
-  .show-groups-btn{display:none !important;}
-  
-  .gcard{border-radius:12px;padding:1rem;margin-bottom:10px;}
-  .gcard.gr{background:#FFF3EE;border:1px solid #F0997B;}
-  .gcard.gk{background:#E6F1FB;border:1px solid #85B7EB;}
-  .gcard h3{font-size:16px;font-weight:600;margin-bottom:8px;}
-  .gcard.gr h3{color:#712B13;}
-  .gcard.gk h3{color:#0C447C;}
-  .mrow{font-size:15px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.07);color:#1a1a1a;}
-  .mrow:last-child{border-bottom:none;}
+  .result .dashakam-display {font-size:24px;font-weight:700;background:rgba(255,255,255,0.7);padding:15px 25px;border-radius:12px;margin-bottom:2.5rem;border:1px dashed rgba(0,0,0,0.15);}
+  .result.rama .dashakam-display {color:#712B13;}
+  .result.krishna .dashakam-display {color:#0C447C;}
+  .result .close-btn{padding:14px 40px;border-radius:10px;font-size:16px;font-weight:600;border:none;cursor:pointer;background:rgba(0,0,0,0.12);color:#1a1a1a;}
   .refresh-btn{width:100%;padding:12px;border-radius:10px;background:#f0f0f0;color:#555;border:none;font-size:14px;cursor:pointer;margin-bottom:1rem;}
   .done-banner{background:#EAF3DE;border-radius:10px;padding:12px;text-align:center;font-size:15px;color:#27500A;font-weight:600;margin-bottom:1rem;display:none;}
+  .show-groups-btn{display:none !important;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>ഗ്രൂപ്പ് തിരഞ്ഞെടുക്കൽ</h1>
-  <p class="sub">ഒരു നമ്പർ tap ചെയ്യുക. നിങ്ങളുടെ ഗ്രൂപ്പ് ഉടൻ അറിയാം.</p>
+  <h1>ശ്രീ നാരായണീയം പാരായണം</h1>
+  <p class="sub">ഒരു നമ്പർ തിരഞ്ഞെടുക്കുക. നിങ്ങളുടെ ഗ്രൂപ്പും ദശകങ്ങളും ഉടൻ അറിയാം.</p>
 
   <div class="counter">
     <div class="cp" style="background:#FFF3EE;border:1px solid #F0997B;">
       <span class="n" id="rc" style="color:#712B13;">0</span>
-      <span style="font-size:13px;color:#993C1D;">രാമ</span>
+      <span style="font-size:13px;color:#993C1D;">രാമ ഗ്രൂപ്പ്</span>
     </div>
     <div class="cp" style="background:#E6F1FB;border:1px solid #85B7EB;">
       <span class="n" id="kc" style="color:#0C447C;">0</span>
-      <span style="font-size:13px;color:#185FA5;">കൃഷ്ണ</span>
+      <span style="font-size:13px;color:#185FA5;">കൃഷ്ണ ഗ്രൂപ്പ്</span>
     </div>
     <div class="cp" style="background:#f5f5f5;border:1px solid #ddd;">
       <span class="n" id="lc" style="color:#555;">24</span>
@@ -81,12 +72,7 @@
 
   <div class="grid" id="grid"></div>
 
-  <div class="done-banner" id="doneBanner">എല്ലാ 24 പേരും ഗ്രൂപ്പ് കണ്ടെത്തി!</div>
-
-  <!-- Container left empty so other users can never peek at roster strings -->
-  <div class="groups-section">
-    <div id="groupsDiv"></div>
-  </div>
+  <div class="done-banner" id="doneBanner">എല്ലാ 24 പേരും രജിസ്റ്റർ ചെയ്തു കഴിഞ്ഞു!</div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -103,6 +89,7 @@
     <div class="pname" id="rName"></div>
     <div class="word" id="rWord"></div>
     <div class="grp" id="rGrp"></div>
+    <div class="dashakam-display" id="rDashakam" style="display:none;"></div>
     <button class="close-btn" onclick="closeResult()">അടയ്ക്കുക</button>
   </div>
 </div>
@@ -166,12 +153,22 @@ async function confirmPick(){
     loadState();
     return;
   }
+  
   const result = document.getElementById('result');
   const w = data.word;
   result.className = 'result show ' + (w === 'rama' ? 'rama' : 'krishna');
   document.getElementById('rName').textContent = data.name;
-  document.getElementById('rWord').textContent = w === 'rama' ? 'രാമ' : 'കൃഷ്ണ';
-  document.getElementById('rGrp').textContent = (w === 'rama' ? 'രാമ' : 'കൃഷ്ണ') + ' ഗ്രൂപ്പ്';
+  document.getElementById('rWord').textContent = w === 'rama' ? 'രാമ ഗ്രൂപ്പ്' : 'കൃഷ്ണ ഗ്രൂപ്പ്';
+  document.getElementById('rGrp').textContent = 'സ്വാഗതം!';
+  
+  const dDiv = document.getElementById('rDashakam');
+  if(data.range) {
+     dDiv.textContent = 'നിങ്ങളുടെ ദശകം: ' + data.range;
+     dDiv.style.display = 'block';
+  } else {
+     dDiv.style.display = 'none';
+  }
+  
   loadState();
 }
 
@@ -179,13 +176,8 @@ function closeResult(){
   document.getElementById('result').classList.remove('show');
 }
 
-// SECURED: Empty function execution protects against front-end leaks
-async function toggleGroups(){
-  return;
-}
-
 loadState();
-setInterval(loadState, 5000); // Polls server every 5 seconds to sync global user data fields smoothly
+setInterval(loadState, 5000);
 </script>
 </body>
 </html>
