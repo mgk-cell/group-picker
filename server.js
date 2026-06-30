@@ -1,89 +1,107 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Global state tracking
-let total = 0;
-let ramaCount = 0;
-let krishnaCount = 0;
-let taken = new Array(24).fill(false);
+// Path pointing to the secure, free Render disk mount folder
+const DATA_FILE = '/data/data.json';
 
-// Master assignment pool (12 Rama slots, 12 Krishna slots)
-// 10 slots per team have dashakams (total 100), 2 extra slots have no dashakams
-let assignmentPool = [];
+let state = {
+    total: 0,
+    ramaCount: 0,
+    krishnaCount: 0,
+    taken: new Array(24).fill(false),
+    assignmentPool: [],
+    masterDatabase: new Array(24).fill(null).map((_, i) => ({
+        taken: false,
+        name: "",
+        group: "",
+        range: null,
+        number: i + 1
+    }))
+};
 
 function generateRandomPool() {
     const dashakamRanges = [
         "1-10", "11-20", "21-30", "31-40", "41-50", 
         "51-60", "61-70", "71-80", "81-90", "91-100"
     ];
-    
     let pool = [];
-    
-    // Add the 10 Rama slots with dashakams
     dashakamRanges.forEach(range => pool.push({ group: 'rama', range: range }));
-    // Add the 2 extra Rama slots with no dashakams
-    pool.push({ group: 'rama', range: null });
-    pool.push({ group: 'rama', range: null });
-    
-    // Add the 10 Krishna slots with dashakams
+    pool.push({ group: 'rama', range: null }, { group: 'rama', range: null });
     dashakamRanges.forEach(range => pool.push({ group: 'krishna', range: range }));
-    // Add the 2 extra Krishna slots with no dashakams
-    pool.push({ group: 'krishna', range: null });
-    pool.push({ group: 'krishna', range: null });
-    
-    // Shuffle the pool using Fisher-Yates algorithm for perfect randomness
+    pool.push({ group: 'krishna', range: null }, { group: 'krishna', range: null });
+
     for (let i = pool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    
     return pool;
 }
 
-// Initialize the random pool
-assignmentPool = generateRandomPool();
+// Check if the secure data folder exists, read it, or create a fresh pool
+if (fs.existsSync(DATA_FILE)) {
+    try {
+        const rawData = fs.readFileSync(DATA_FILE, 'utf8');
+        state = JSON.parse(rawData);
+        console.log("✓ Saved data restored successfully!");
+    } catch (e) {
+        console.log("Error reading save file, starting fresh pool.");
+        state.assignmentPool = generateRandomPool();
+    }
+} else {
+    state.assignmentPool = generateRandomPool();
+    // Ensure the directory exists before writing to it
+    if (!fs.existsSync('/data')) {
+        fs.mkdirSync('/data', { recursive: true });
+    }
+    fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
+}
 
-// Track data submitted for each of the 24 numbered grid boxes
-let masterDatabase = new Array(24).fill(null).map((_, i) => ({
-    taken: false,
-    name: "",
-    group: "",
-    range: null,
-    number: i + 1
-}));
+function saveToDisk() {
+    if (!fs.existsSync('/data')) {
+        fs.mkdirSync('/data', { recursive: true });
+    }
+    fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
+}
 
 app.get('/state', (req, res) => {
-    res.json({ taken, ramaCount, krishnaCount, total });
+    res.json({ 
+        taken: state.taken, 
+        ramaCount: state.ramaCount, 
+        krishnaCount: state.krishnaCount, 
+        total: state.total 
+    });
 });
 
 app.post('/pick', (req, res) => {
     const { index, name } = req.body;
     
-    if (index < 0 || index >= 24 || taken[index]) {
+    if (index < 0 || index >= 24 || state.taken[index]) {
         return res.status(400).json({ ok: false, error: 'taken' });
     }
 
-    // Pull the next random assignment from our shuffled pool
-    const assignment = assignmentPool[total];
+    const assignment = state.assignmentPool[state.total];
 
-    taken[index] = true;
-    total++;
+    state.taken[index] = true;
+    state.total++;
     
-    if (assignment.group === 'rama') ramaCount++;
-    if (assignment.group === 'krishna') krishnaCount++;
+    if (assignment.group === 'rama') state.ramaCount++;
+    if (assignment.group === 'krishna') state.krishnaCount++;
 
-    masterDatabase[index] = {
+    state.masterDatabase[index] = {
         taken: true,
         name: name,
         group: assignment.group,
         range: assignment.range,
         number: index + 1
     };
+
+    saveToDisk();
 
     res.json({ 
         ok: true, 
@@ -93,15 +111,14 @@ app.post('/pick', (req, res) => {
     });
 });
 
-// SECRET ADMIN VIEW
 app.get('/groups', (req, res) => {
     const clientSecret = req.query.secret;
     if (clientSecret !== 'myadmin123') {
         return res.status(403).send('<h1>Access Denied</h1>');
     }
 
-    const ramaGroup = masterDatabase.filter(p => p.taken && p.group === 'rama');
-    const krishnaGroup = masterDatabase.filter(p => p.taken && p.group === 'krishna');
+    const ramaGroup = state.masterDatabase.filter(p => p.taken && p.group === 'rama');
+    const krishnaGroup = state.masterDatabase.filter(p => p.taken && p.group === 'krishna');
 
     let htmlOutput = `
     <html>
@@ -120,7 +137,7 @@ app.get('/groups', (req, res) => {
     </head>
     <body>
         <h1>ശ്രീ നാരായണീയം പാരായണം - Dashboard</h1>
-        <p>Total participants registered: <strong>${total} / 24</strong></p>
+        <p>Total participants registered: <strong>${state.total} / 24</strong></p>
         
         <div class="card" style="border-top: 5px solid #F0997B;">
             <h2 style="color: #712B13;">രാമ ഗ്രൂപ്പ് (${ramaGroup.length} / 12)</h2>
@@ -149,19 +166,18 @@ app.get('/groups', (req, res) => {
     res.send(htmlOutput);
 });
 
-// SECRET RESET ROUTE
 app.get('/reset', (req, res) => {
     const clientSecret = req.query.secret;
     if (clientSecret !== 'myadmin123') {
         return res.status(403).send('<h1>Access Denied</h1>');
     }
 
-    total = 0;
-    ramaCount = 0;
-    krishnaCount = 0;
-    taken = new Array(24).fill(false);
-    assignmentPool = generateRandomPool(); // Reroll absolute randomness
-    masterDatabase = new Array(24).fill(null).map((_, i) => ({
+    state.total = 0;
+    state.ramaCount = 0;
+    state.krishnaCount = 0;
+    state.taken = new Array(24).fill(false);
+    state.assignmentPool = generateRandomPool();
+    state.masterDatabase = new Array(24).fill(null).map((_, i) => ({
         taken: false,
         name: "",
         group: "",
@@ -169,7 +185,9 @@ app.get('/reset', (req, res) => {
         number: i + 1
     }));
 
-    res.send('<h1>System Reset Successful ✓</h1><p>The entire parayan schedule has been cleared and completely randomized again.</p><br><a href="/">Go to Home Grid</a>');
+    saveToDisk();
+
+    res.send('<h1>System Reset Successful ✓</h1><p>The saved data file has been completely wiped and randomized freshly.</p><br><a href="/">Go to Home Grid</a>');
 });
 
 app.listen(PORT, () => {
