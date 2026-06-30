@@ -66,7 +66,6 @@ app.post('/pick', (req, res) => {
 app.get('/groups', (req, res) => {
     const clientSecret = req.query.secret;
     
-    // CHANGE 'myadmin123' to whatever secret password you want!
     if (clientSecret !== 'myadmin123') {
         return res.status(403).send('<h1>Access Denied</h1><p>You do not have permission to view this layout.</p>');
     }
@@ -74,7 +73,6 @@ app.get('/groups', (req, res) => {
     const ramaGroup = masterDatabase.filter(p => p.taken && p.group === 'rama');
     const krishnaGroup = masterDatabase.filter(p => p.taken && p.group === 'krishna');
 
-    // Generates a clean private view dashboard just for you
     let htmlOutput = `
     <html>
     <head>
@@ -107,6 +105,30 @@ app.get('/groups', (req, res) => {
     `;
 
     res.send(htmlOutput);
+});
+
+// NEW ADDITION: SECRET RESET ROUTE
+// Access by navigating to: your-url.com/reset?secret=myadmin123
+app.get('/reset', (req, res) => {
+    const clientSecret = req.query.secret;
+    
+    if (clientSecret !== 'myadmin123') {
+        return res.status(403).send('<h1>Access Denied</h1>');
+    }
+
+    // Reset everything back to original state
+    total = 0;
+    ramaCount = 0;
+    krishnaCount = 0;
+    taken = new Array(24).fill(false);
+    masterDatabase = new Array(24).fill(null).map((_, i) => ({
+        taken: false,
+        name: "",
+        group: "",
+        number: i + 1
+    }));
+
+    res.send('<h1>System Reset Successful ✓</h1><p>The entire grid has been cleared back to its original state. All other phones will update on their next refresh.</p><br><a href="/">Go to Home Grid</a>');
 });
 
 app.listen(PORT, () => {
