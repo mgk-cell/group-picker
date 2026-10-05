@@ -14,7 +14,7 @@
     }
 
     body {
-      font-family: 'Gayathri', 'Manjari', 'Segoe UI', sans-serif;
+      font-family: 'Gayathri', 'Segoe UI', sans-serif;
       background-color: var(--bg);
       color: #2d3748;
       margin: 0;
@@ -23,8 +23,8 @@
     }
 
     .container {
-      max-width: 650px;
-      margin: 0 auto;
+      max-width: 550px;
+      margin: 10px auto;
       background: var(--card);
       padding: 20px;
       border-radius: 16px;
@@ -39,7 +39,7 @@
       margin-bottom: 20px;
     }
 
-    .form-group { margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
 
     label {
       display: block;
@@ -122,8 +122,8 @@
     .rama-bg { background: #fff5f5; color: var(--rama); border: 3px solid #feb2b2; }
 
     .admin-section {
-      margin-top: 40px;
-      padding-top: 20px;
+      margin-top: 30px;
+      padding-top: 15px;
       border-top: 2px dashed #cbd5e0;
     }
 
@@ -135,9 +135,9 @@
 
     th, td {
       border: 1px solid #cbd5e0;
-      padding: 10px;
+      padding: 8px;
       text-align: left;
-      font-size: 16px;
+      font-size: 15px;
     }
 
     th { background: #edf2f7; }
@@ -151,31 +151,23 @@
       font-size: 16px;
       cursor: pointer;
       margin-top: 15px;
+      width: 100%;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>നിങ്ങളുടെ ഗ്രൂപ്പ് തിരഞ്ഞെടുക്കുക</h1>
+  <h1>നിങ്ങളുടെ നമ്പർ തിരഞ്ഞെടുക്കുക</h1>
 
   <div id="userForm">
     <div class="form-group">
       <label for="userName">നിങ്ങളുടെ പേര് (Name):</label>
-      <input type="text" id="userName" placeholder="പേര് ടൈപ്പ് ചെയ്യുക...">
+      <input type="text" id="userName" placeholder="പേര് എന്റർ ചെയ്യുക...">
     </div>
 
-    <div class="grid-title">ഒരു നമ്പർ തിരഞ്ഞെടുക്കുക:</div>
-    
-    <div class="grid-title" style="font-size: 16px; color: var(--krishna);">
-      • 1 മുതൽ 12 വരെ: കൃഷ്ണ ഗ്രൂപ്പ്
-    </div>
-    <div class="number-grid" id="krishnaGrid"></div>
-
-    <div class="grid-title" style="font-size: 16px; color: var(--rama);">
-      • 13 മുതൽ 24 വരെ: രാമ ഗ്രൂപ്പ്
-    </div>
-    <div class="number-grid" id="ramaGrid"></div>
+    <div class="grid-title">ഒരു നമ്പർ തിരഞ്ഞെടുക്കുക (1-24):</div>
+    <div class="number-grid" id="numberGrid"></div>
 
     <button class="submit-btn" id="submitBtn" onclick="submitChoice()">സമർപ്പിക്കുക (Submit)</button>
   </div>
@@ -183,13 +175,12 @@
   <div id="resultBox" class="result-box"></div>
 
   <div class="admin-section">
-    <button onclick="toggleAdmin()" style="background:none; border:none; color:#718096; cursor:pointer;">
+    <button onclick="toggleAdmin()" style="background:none; border:none; color:#718096; cursor:pointer; width:100%;">
       ⚙️ Admin Access
     </button>
 
     <div id="adminPanel" style="display: none; margin-top: 15px;">
-      <h3>രജിസ്ട്രേഷൻ ഡാറ്റ (Data List)</h3>
-      <button onclick="loadAdminData()" style="padding: 5px 10px; margin-bottom: 10px;">Refresh Data</button>
+      <h3>ലിസ്റ്റ് (Registered Data)</h3>
       <table>
         <thead>
           <tr>
@@ -210,27 +201,27 @@
   let selectedNumber = null;
 
   window.onload = function() {
-    renderGrids();
+    renderGrid();
     fetchLiveStatus();
   };
 
-  function renderGrids() {
-    const kGrid = document.getElementById('krishnaGrid');
-    const rGrid = document.getElementById('ramaGrid');
-    kGrid.innerHTML = '';
-    rGrid.innerHTML = '';
-
-    for (let i = 1; i <= 12; i++) kGrid.appendChild(createBtn(i));
-    for (let i = 13; i <= 24; i++) rGrid.appendChild(createBtn(i));
+  function renderGrid() {
+    const grid = document.getElementById('numberGrid');
+    grid.innerHTML = '';
+    for (let i = 1; i <= 24; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'num-btn';
+      btn.innerText = i;
+      btn.id = 'num-' + i;
+      btn.onclick = () => selectNumber(i);
+      grid.appendChild(btn);
+    }
   }
 
-  function createBtn(num) {
-    const btn = document.createElement('button');
-    btn.className = 'num-btn';
-    btn.innerText = num;
-    btn.id = 'num-' + num;
-    btn.onclick = () => selectNumber(num);
-    return btn;
+  function selectNumber(num) {
+    selectedNumber = num;
+    document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('num-' + num).classList.add('selected');
   }
 
   async function fetchLiveStatus() {
@@ -245,16 +236,10 @@
     }
   }
 
-  function selectNumber(num) {
-    selectedNumber = num;
-    document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
-    document.getElementById('num-' + num).classList.add('selected');
-  }
-
   async function submitChoice() {
     const name = document.getElementById('userName').value.trim();
     if (!name || !selectedNumber) {
-      alert("ദയവായി പേരും നമ്പറും നൽകുക (Please enter name & select number)");
+      alert("ദയവായി പേരും നമ്പറും നൽകുക (Please enter name & select a number)");
       return;
     }
 
@@ -269,14 +254,16 @@
     });
 
     const data = await res.json();
+
     if (data.status === 'success') {
       document.getElementById('userForm').style.display = 'none';
       const resultBox = document.getElementById('resultBox');
       resultBox.style.display = 'block';
-      resultBox.className = `result-box ${selectedNumber <= 12 ? 'krishna-bg' : 'rama-bg'}`;
+      const isKrishna = data.group.includes('കൃഷ്ണ');
+      resultBox.className = `result-box ${isKrishna ? 'krishna-bg' : 'rama-bg'}`;
       resultBox.innerHTML = `
-        <div>നന്ദി ${name}!</div>
-        <div style="font-size: 32px; margin: 15px 0;">${data.group}</div>
+        <div>നന്ദി ${data.name}!</div>
+        <div style="font-size: 30px; margin: 15px 0;">${data.group}</div>
         <div>തിരഞ്ഞെടുത്ത നമ്പർ: ${data.number}</div>
       `;
     } else {
