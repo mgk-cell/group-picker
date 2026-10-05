@@ -199,6 +199,7 @@
 
 <script>
   let selectedNumber = null;
+  let currentAdminPin = null;
 
   window.onload = function() {
     renderGrid();
@@ -274,30 +275,51 @@
     }
   }
 
-  function toggleAdmin() {
+  async function toggleAdmin() {
     const panel = document.getElementById('adminPanel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    if (panel.style.display === 'block') loadAdminData();
-  }
 
-  async function loadAdminData() {
-    const res = await fetch('/api/data');
-    const data = await res.json();
-    const tbody = document.getElementById('adminTableBody');
-    tbody.innerHTML = '';
-    data.records.forEach(r => {
-      tbody.innerHTML += `<tr><td>${r.name}</td><td>${r.number}</td><td>${r.group}</td></tr>`;
+    if (panel.style.display === 'block') {
+      panel.style.display = 'none';
+      currentAdminPin = null;
+      return;
+    }
+
+    const pin = prompt("Enter Admin PIN to view data:");
+    if (!pin) return;
+
+    const res = await fetch('/api/admin/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
     });
+
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      currentAdminPin = pin;
+      panel.style.display = 'block';
+      const tbody = document.getElementById('adminTableBody');
+      tbody.innerHTML = '';
+      data.records.forEach(r => {
+        tbody.innerHTML += `<tr><td>${r.name}</td><td>${r.number}</td><td>${r.group}</td></tr>`;
+      });
+    } else {
+      alert(data.message || "Invalid PIN!");
+    }
   }
 
   async function triggerReset() {
-    const pin = prompt("Enter Admin PIN:");
-    if (!pin) return;
+    if (!currentAdminPin) {
+      alert("Unauthorized!");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to reset all data?")) return;
 
     const res = await fetch('/api/reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin })
+      body: JSON.stringify({ pin: currentAdminPin })
     });
 
     const data = await res.json();
