@@ -1,331 +1,145 @@
 <!DOCTYPE html>
 <html lang="ml">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ഗ്രൂപ്പ് തിരഞ്ഞെടുക്കൽ</title>
-  <style>
-    :root {
-      --primary: #8b0000;
-      --bg: #fffbf0;
-      --card: #ffffff;
-      --krishna: #1a365d;
-      --rama: #7b341e;
-    }
-
-    body {
-      font-family: 'Gayathri', 'Segoe UI', sans-serif;
-      background-color: var(--bg);
-      color: #2d3748;
-      margin: 0;
-      padding: 15px;
-      font-size: 18px;
-    }
-
-    .container {
-      max-width: 550px;
-      margin: 10px auto;
-      background: var(--card);
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      border: 2px solid #e2e8f0;
-    }
-
-    h1 {
-      text-align: center;
-      color: var(--primary);
-      font-size: 26px;
-      margin-bottom: 20px;
-    }
-
-    .form-group { margin-bottom: 15px; }
-
-    label {
-      display: block;
-      font-weight: bold;
-      font-size: 20px;
-      margin-bottom: 8px;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 14px;
-      font-size: 20px;
-      border: 2px solid #cbd5e0;
-      border-radius: 8px;
-      box-sizing: border-box;
-    }
-
-    .grid-title {
-      font-weight: bold;
-      font-size: 20px;
-      margin: 15px 0 10px;
-    }
-
-    .number-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .num-btn {
-      padding: 16px 0;
-      font-size: 22px;
-      font-weight: bold;
-      border: 2px solid #cbd5e0;
-      border-radius: 8px;
-      background: #f7fafc;
-      cursor: pointer;
-    }
-
-    .num-btn.selected {
-      background: #3182ce;
-      color: white;
-      border-color: #2b6cb0;
-    }
-
-    .num-btn.taken {
-      background: #e2e8f0;
-      color: #a0aec0;
-      border-color: #cbd5e0;
-      text-decoration: line-through;
-      cursor: not-allowed;
-    }
-
-    .submit-btn {
-      width: 100%;
-      background: #2f855a;
-      color: white;
-      font-size: 22px;
-      font-weight: bold;
-      padding: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .submit-btn:disabled { background: #a0aec0; }
-
-    .result-box {
-      display: none;
-      text-align: center;
-      padding: 25px;
-      border-radius: 12px;
-      margin-top: 20px;
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .krishna-bg { background: #ebf8ff; color: var(--krishna); border: 3px solid #63b3ed; }
-    .rama-bg { background: #fff5f5; color: var(--rama); border: 3px solid #feb2b2; }
-
-    .admin-section {
-      margin-top: 30px;
-      padding-top: 15px;
-      border-top: 2px dashed #cbd5e0;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      border: 1px solid #cbd5e0;
-      padding: 8px;
-      text-align: left;
-      font-size: 15px;
-    }
-
-    th { background: #edf2f7; }
-
-    .reset-btn {
-      background: #e53e3e;
-      color: white;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 15px;
-      width: 100%;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ഗ്രൂപ്പ് തിരഞ്ഞെടുപ്പ് (Group Picker)</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; text-align: center; color: #333; }
+        h1 { color: #2c3e50; font-size: 24px; margin-bottom: 5px; }
+        p.subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
+        #setup-container { background: #fff; padding: 20px; border-radius: 10px; max-width: 400px; margin: 0 auto 20px auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input[type="text"] { width: 80%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; }
+        button { background: #27ae60; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #219653; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 450px; margin: 0 auto; }
+        .box { background: #fff; border: 2px solid #3498db; border-radius: 8px; padding: 20px 0; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .box:hover:not(.taken) { background: #ebf5fb; }
+        .box.taken { background: #bdc3c7; border-color: #95a5a6; color: #7f8c8d; cursor: not-allowed; }
+        #result-modal { display: none; margin-top: 20px; background: #fff; padding: 20px; border-radius: 10px; max-width: 400px; margin-left: auto; margin-right: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .team-name { font-size: 32px; font-weight: bold; margin: 10px 0; color: #e74c3c; }
+    </style>
 </head>
 <body>
 
-<div class="container">
-  <h1></h1>
+    <h1>ഗ്രൂപ്പ് തിരഞ്ഞെടുപ്പ്</h1>
+    <p class="subtitle">നിങ്ങളുടെ പേര് നൽകി ഒരു പെട്ടി തിരഞ്ഞെടുക്കുക</p>
 
-  <div id="userForm">
-    <div class="form-group">
-      <label for="userName">നിങ്ങളുടെ പേര് (Name):</label>
-      <input type="text" id="userName" placeholder="പേര് എന്റർ ചെയ്യുക...">
+    <div id="setup-container">
+        <div id="name-box">
+            <input type="text" id="username" placeholder="നിങ്ങളുടെ പൂർണ്ണ നാമം (Full Name)" autocomplete="off">
+            <br>
+            <button onclick="saveName()">തുടരുക (Continue)</button>
+        </div>
+        <div id="welcome-msg" style="display:none; font-weight:bold; color: #27ae60;">
+             സ്വാഗതം, <span id="display-name"></span>! താഴെ ഒരു പെട്ടി തിരഞ്ഞെടുക്കുക.
+        </div>
     </div>
 
-    <div class="grid-title">ഒരു നമ്പർ തിരഞ്ഞെടുക്കുക (1-24):</div>
-    <div class="number-grid" id="numberGrid"></div>
+    <div class="grid" id="box-grid"></div>
 
-    <button class="submit-btn" id="submitBtn" onclick="submitChoice()">സമർപ്പിക്കുക (Submit)</button>
-  </div>
-
-  <div id="resultBox" class="result-box"></div>
-
-  <div class="admin-section">
-    <button onclick="toggleAdmin()" style="background:none; border:none; color:#718096; cursor:pointer; width:100%;">
-      ⚙️ Admin Access
-    </button>
-
-    <div id="adminPanel" style="display: none; margin-top: 15px;">
-      <h3>ലിസ്റ്റ് (Registered Data)</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>No.</th>
-            <th>Group</th>
-          </tr>
-        </thead>
-        <tbody id="adminTableBody"></tbody>
-      </table>
-
-      <button class="reset-btn" onclick="triggerReset()">Reset All Data (Admin Only)</button>
+    <div id="result-modal">
+        <h3>നിങ്ങൾക്ക് ലഭിച്ച ഗ്രൂപ്പ്:</h3>
+        <div class="team-name" id="assigned-word"></div>
+        <p>ഈ വിവരം രേഖപ്പെടുത്തിക്കഴിഞ്ഞു.</p>
     </div>
-  </div>
-</div>
 
 <script>
-  let selectedNumber = null;
-  let currentAdminPin = null;
+    let myName = localStorage.getItem('picker_username') || '';
 
-  window.onload = function() {
-    renderGrid();
-    fetchLiveStatus();
-  };
+    window.onload = function() {
+        if (myName) {
+            document.getElementById('name-box').style.display = 'none';
+            document.getElementById('welcome-msg').style.display = 'block';
+            document.getElementById('display-name').innerText = myName;
+        }
+        loadState();
+    };
 
-  function renderGrid() {
-    const grid = document.getElementById('numberGrid');
-    grid.innerHTML = '';
-    for (let i = 1; i <= 24; i++) {
-      const btn = document.createElement('button');
-      btn.className = 'num-btn';
-      btn.innerText = i;
-      btn.id = 'num-' + i;
-      btn.onclick = () => selectNumber(i);
-      grid.appendChild(btn);
-    }
-  }
-
-  function selectNumber(num) {
-    selectedNumber = num;
-    document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
-    document.getElementById('num-' + num).classList.add('selected');
-  }
-
-  async function fetchLiveStatus() {
-    const res = await fetch('/api/data');
-    const data = await res.json();
-    for (let i = 1; i <= 24; i++) {
-      const btn = document.getElementById('num-' + i);
-      if (data.takenNumbers.includes(i)) {
-        btn.classList.add('taken');
-        btn.disabled = true;
-      }
-    }
-  }
-
-  async function submitChoice() {
-    const name = document.getElementById('userName').value.trim();
-    if (!name || !selectedNumber) {
-      alert("ദയവായി പേരും നമ്പറും നൽകുക (Please enter name & select a number)");
-      return;
+    function saveName() {
+        const input = document.getElementById('username').value.trim();
+        if (!input) {
+            alert('ദയവായി നിങ്ങളുടെ പേര് നൽകുക (Please enter your name)');
+            return;
+        }
+        myName = input;
+        localStorage.setItem('picker_username', myName);
+        document.getElementById('name-box').style.display = 'none';
+        document.getElementById('welcome-msg').style.display = 'block';
+        document.getElementById('display-name').innerText = myName;
     }
 
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.innerText = "കാത്തിരിക്കൂ... (Processing...)";
-
-    const res = await fetch('/api/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, number: selectedNumber })
-    });
-
-    const data = await res.json();
-
-    if (data.status === 'success') {
-      document.getElementById('userForm').style.display = 'none';
-      const resultBox = document.getElementById('resultBox');
-      resultBox.style.display = 'block';
-      const isKrishna = data.group.includes('കൃഷ്ണ');
-      resultBox.className = `result-box ${isKrishna ? 'krishna-bg' : 'rama-bg'}`;
-      resultBox.innerHTML = `
-        <div>നന്ദി ${data.name}!</div>
-        <div style="font-size: 30px; margin: 15px 0;">${data.group}</div>
-        <div>തിരഞ്ഞെടുത്ത നമ്പർ: ${data.number}</div>
-      `;
-    } else {
-      alert(data.message);
-      btn.disabled = false;
-      btn.innerText = "സമർപ്പിക്കുക (Submit)";
-      fetchLiveStatus();
-    }
-  }
-
-  async function toggleAdmin() {
-    const panel = document.getElementById('adminPanel');
-
-    if (panel.style.display === 'block') {
-      panel.style.display = 'none';
-      currentAdminPin = null;
-      return;
+    async function loadState() {
+        try {
+            const res = await fetch('/state');
+            const data = await res.json();
+            renderGrid(data.taken);
+        } catch (e) {
+            console.error('Error loading state:', e);
+        }
     }
 
-    const pin = prompt("Enter Admin PIN to view data:");
-    if (!pin) return;
+    function renderGrid(takenArray) {
+        const grid = document.getElementById('box-grid');
+        grid.innerHTML = '';
+        
+        // Check if current user already picked a box in this session
+        const userHasPicked = localStorage.getItem('picker_done');
 
-    const res = await fetch('/api/admin/data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin })
-    });
+        for (let i = 0; i < 24; i++) {
+            const box = document.createElement('div');
+            box.className = 'box';
+            box.innerText = i + 1;
 
-    const data = await res.json();
-
-    if (data.status === 'success') {
-      currentAdminPin = pin;
-      panel.style.display = 'block';
-      const tbody = document.getElementById('adminTableBody');
-      tbody.innerHTML = '';
-      data.records.forEach(r => {
-        tbody.innerHTML += `<tr><td>${r.name}</td><td>${r.number}</td><td>${r.group}</td></tr>`;
-      });
-    } else {
-      alert(data.message || "Invalid PIN!");
-    }
-  }
-
-  async function triggerReset() {
-    if (!currentAdminPin) {
-      alert("Unauthorized!");
-      return;
+            if (takenArray[i]) {
+                box.classList.add('taken');
+                box.innerText = '✓';
+            } else if (userHasPicked) {
+                // If this device already picked, gray out remaining boxes to prevent multi-picking
+                box.classList.add('taken');
+            } else {
+                box.onclick = () => pickBox(i);
+            }
+            grid.appendChild(box);
+        }
     }
 
-    if (!confirm("Are you sure you want to reset all data?")) return;
+    async function pickBox(index) {
+        if (!myName) {
+            alert('ദയവായി ആദ്യം മുകളിൽ നിങ്ങളുടെ പേര് നൽകുക!');
+            document.getElementById('username').focus();
+            return;
+        }
 
-    const res = await fetch('/api/reset', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: currentAdminPin })
-    });
+        if (localStorage.getItem('picker_done')) {
+            alert('നിങ്ങൾ ഇതിനകം ഒരു പെട്ടി തിരഞ്ഞെടുത്തിട്ടുണ്ട്!');
+            return;
+        }
 
-    const data = await res.json();
-    alert(data.message);
-    if (data.status === 'success') location.reload();
-  }
+        if (!confirm(`പെട്ടി നമ്പർ ${index + 1} തിരഞ്ഞെടുക്കണമെന്ന് ഉറപ്പാണോ?`)) return;
+
+        try {
+            const res = await fetch('/pick', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ index: index, name: myName })
+            });
+            const data = await res.json();
+
+            if (data.ok) {
+                localStorage.setItem('picker_done', 'true');
+                document.getElementById('box-grid').style.display = 'none';
+                document.getElementById('result-modal').style.display = 'block';
+                document.getElementById('assigned-word').innerText = data.word;
+            } else {
+                alert(data.error === 'taken' ? 'ഈ പെട്ടി മറ്റൊരാൾ എടുത്തു കഴിഞ്ഞു!' : 'തെറ്റ് സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക.');
+                loadState();
+            }
+        } catch (e) {
+            alert('കണക്ഷൻ തകരാർ. വീണ്ടും ശ്രമിക്കുക.');
+        }
+    }
 </script>
+
 </body>
 </html>
