@@ -5,21 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ഗ്രൂപ്പ് തിരഞ്ഞെടുപ്പ് (Group Picker)</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #fdfbf7; margin: 0; padding: 20px; text-align: center; color: #2c3e50; }
-        h1 { color: #8e44ad; font-size: 26px; margin-bottom: 5px; }
-        p.subtitle { color: #555; font-size: 16px; margin-bottom: 20px; }
-        #setup-container { background: #fff; padding: 20px; border-radius: 12px; max-width: 400px; margin: 0 auto 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid #f39c12; }
-        input[type="text"] { width: 85%; padding: 14px; font-size: 18px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 12px; text-align: center; }
-        button { background: #27ae60; color: white; border: none; padding: 14px 24px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #219653; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; text-align: center; color: #2c3e50; }
+        h1 { color: #1abc9c; font-size: 28px; margin-bottom: 5px; font-weight: 700; }
+        p.subtitle { color: #7f8c8d; font-size: 16px; margin-bottom: 25px; }
+        
+        #setup-container { background: #ffffff; padding: 22px; border-radius: 12px; max-width: 420px; margin: 0 auto 25px auto; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+        input[type="text"] { width: 85%; padding: 14px; font-size: 16px; border: 2px solid #cbd5e1; border-radius: 8px; margin-bottom: 12px; text-align: center; outline: none; transition: 0.2s; }
+        input[type="text"]:focus { border-color: #1abc9c; }
+        
+        button { background: #1abc9c; color: white; border: none; padding: 14px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        button:hover { background: #16a085; }
         
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 480px; margin: 0 auto; }
-        .box { background: #fff9c4; border: 3px solid #f39c12; border-radius: 12px; padding: 24px 0; font-size: 24px; font-weight: bold; cursor: pointer; color: #d35400; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.08); }
-        .box:hover:not(.taken) { background: #fff59d; transform: scale(1.03); }
-        .box.taken { background: #34495e; border: 3px solid #2c3e50; color: #ecf0f1; cursor: not-allowed; box-shadow: none; opacity: 0.85; }
+        
+        /* Unpicked Boxes: Clean, modern white card with a crisp border */
+        .box { background: #ffffff; border: 2px solid #cbd5e1; border-radius: 10px; padding: 22px 0; font-size: 22px; font-weight: 700; cursor: pointer; color: #1e293b; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .box:hover:not(.taken) { background: #f1f5f9; border-color: #1abc9c; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        
+        /* Picked/Taken Boxes: Clearly muted and distinct */
+        .box.taken { background: #e2e8f0; border: 2px solid #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
 
-        #result-modal { display: none; margin-top: 20px; background: #fff; padding: 25px; border-radius: 12px; max-width: 400px; margin-left: auto; margin-right: auto; box-shadow: 0 6px 15px rgba(0,0,0,0.2); border: 3px solid #8e44ad; }
-        .team-name { font-size: 38px; font-weight: bold; margin: 15px 0; color: #c0392b; }
+        #result-modal { display: none; margin-top: 20px; background: #ffffff; padding: 30px; border-radius: 12px; max-width: 420px; margin-left: auto; margin-right: auto; box-shadow: 0 8px 20px rgba(0,0,0,0.08); border: 2px solid #1abc9c; }
+        .team-name { font-size: 36px; font-weight: 800; margin: 15px 0; color: #d97706; }
     </style>
 </head>
 <body>
@@ -33,7 +40,7 @@
             <br>
             <button onclick="saveName()">തുടരുക (Continue)</button>
         </div>
-        <div id="welcome-msg" style="display:none; font-weight:bold; color: #27ae60; font-size: 18px;">
+        <div id="welcome-msg" style="display:none; font-weight:600; color: #10b981; font-size: 18px;">
              സ്വാഗതം, <span id="display-name"></span>!<br>താഴെ ഒരു പെട്ടി തിരഞ്ഞെടുക്കുക.
         </div>
     </div>
@@ -43,7 +50,7 @@
     <div id="result-modal">
         <h3>നിങ്ങൾക്ക് ലഭിച്ച ഗ്രൂപ്പ്:</h3>
         <div class="team-name" id="assigned-word"></div>
-        <p style="font-size: 16px; color: #555;">ഈ വിവരം രേഖപ്പെടുത്തിക്കഴിഞ്ഞു.</p>
+        <p style="font-size: 15px; color: #64748b;">ഈ വിവരം രേഖപ്പെടുത്തിക്കഴിഞ്ഞു.</p>
     </div>
 
 <script>
@@ -110,7 +117,7 @@
 
             if (takenArray[i]) {
                 box.classList.add('taken');
-                box.innerHTML = `<span style="font-size: 14px; display:block; color:#95a5a6;">എടുത്തു</span><strong>#${i+1}</strong><br><span style="font-size: 12px; color:#e74c3c;">Locked</span>`;
+                box.innerHTML = `<span style="font-size: 12px; display:block; color:#94a3b8;">എടുത്തു</span><strong>#${i+1}</strong>`;
             } else if (userHasPicked) {
                 box.classList.add('taken');
                 box.innerText = i + 1;
