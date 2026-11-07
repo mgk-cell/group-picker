@@ -14,12 +14,8 @@
         button:hover { background: #219653; }
         
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 480px; margin: 0 auto; }
-        
-        /* Unpicked Boxes: Bright, inviting gold/cream */
         .box { background: #fff9c4; border: 3px solid #f39c12; border-radius: 12px; padding: 24px 0; font-size: 24px; font-weight: bold; cursor: pointer; color: #d35400; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.08); }
         .box:hover:not(.taken) { background: #fff59d; transform: scale(1.03); }
-        
-        /* Picked/Taken Boxes: Extremely high contrast dark grey/red X so it's impossible to mistake */
         .box.taken { background: #34495e; border: 3px solid #2c3e50; color: #ecf0f1; cursor: not-allowed; box-shadow: none; opacity: 0.85; }
 
         #result-modal { display: none; margin-top: 20px; background: #fff; padding: 25px; border-radius: 12px; max-width: 400px; margin-left: auto; margin-right: auto; box-shadow: 0 6px 15px rgba(0,0,0,0.2); border: 3px solid #8e44ad; }
@@ -54,11 +50,6 @@
     let myName = localStorage.getItem('picker_username') || '';
 
     window.onload = function() {
-        if (myName) {
-            document.getElementById('name-box').style.display = 'none';
-            document.getElementById('welcome-msg').style.display = 'block';
-            document.getElementById('display-name').innerText = myName;
-        }
         loadState();
     };
 
@@ -70,11 +61,8 @@
         }
         myName = input;
         localStorage.setItem('picker_username', myName);
-        // Clear old session lock on name update so testing is smooth
         localStorage.removeItem('picker_done');
-        document.getElementById('name-box').style.display = 'none';
-        document.getElementById('welcome-msg').style.display = 'block';
-        document.getElementById('display-name').innerText = myName;
+        document.getElementById('name-box').style.display = 'block'; // Keep visible or toggle
         loadState();
     }
 
@@ -82,6 +70,22 @@
         try {
             const res = await fetch('/state');
             const data = await res.json();
+            
+            // CHECK HARD WIPE VERSION: If server reset, clear local cache automatically!
+            const lastVersion = localStorage.getItem('picker_reset_version');
+            if (lastVersion !== String(data.resetVersion)) {
+                localStorage.clear(); // Wipe all stored names & locks instantly
+                location.reload(); // Refresh page to pristine state
+                return;
+            }
+
+            // Restore UI based on current session
+            if (myName && localStorage.getItem('picker_username')) {
+                document.getElementById('name-box').style.display = 'none';
+                document.getElementById('welcome-msg').style.display = 'block';
+                document.getElementById('display-name').innerText = myName;
+            }
+
             renderGrid(data.taken);
         } catch (e) {
             console.error('Error loading state:', e);
@@ -113,6 +117,7 @@
     }
 
     async function pickBox(index) {
+        myName = localStorage.getItem('picker_username');
         if (!myName) {
             alert('ദയവായി ആദ്യം മുകളിൽ നിങ്ങളുടെ പേര് നൽകുക!');
             document.getElementById('username').focus();
@@ -133,6 +138,11 @@
                 body: JSON.stringify({ index: index, name: myName })
             });
             const data = await res.json();
+
+            // Store current reset version on successful pick sync
+            const stateRes = await fetch('/state');
+            const stateData = await stateRes.json();
+            localStorage.setItem('picker_reset_version', stateData.resetVersion);
 
             if (data.ok) {
                 localStorage.setItem('picker_done', 'true');
