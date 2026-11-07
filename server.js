@@ -7,14 +7,12 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static('public'));
 
-// Uses your existing environment variable for MongoDB Atlas connection
 const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Database Schema
 const GameSchema = new mongoose.Schema({
   id: { type: String, default: 'active_game' },
   words: [String],
@@ -23,7 +21,6 @@ const GameSchema = new mongoose.Schema({
 
 const Game = mongoose.model('Game', GameSchema);
 
-// True cryptographic Fisher-Yates Shuffle using crypto.randomInt
 function generateRandomizedWords() {
   let arr = Array(12).fill('രാമ').concat(Array(12).fill('കൃഷ്ണ'));
   for (let i = arr.length - 1; i > 0; i--) {
@@ -33,7 +30,6 @@ function generateRandomizedWords() {
   return arr;
 }
 
-// Helper to get or initialize database game state
 async function getGameState() {
   let game = await Game.findOne({ id: 'active_game' });
   if (!game) {
@@ -46,7 +42,7 @@ async function getGameState() {
   return game;
 }
 
-// Get current public state across phones
+// Public state for players
 app.get('/state', async (req, res) => {
   try {
     const game = await getGameState();
@@ -59,7 +55,7 @@ app.get('/state', async (req, res) => {
   }
 });
 
-// Pick a box route
+// Pick a box
 app.post('/pick', async (req, res) => {
   try {
     const { index, name } = req.body;
@@ -67,7 +63,6 @@ app.post('/pick', async (req, res) => {
     if (!name || !name.trim()) return res.json({ ok: false, error: 'no name' });
 
     const game = await getGameState();
-
     if (game.picks[index] !== null) return res.json({ ok: false, error: 'taken' });
 
     game.picks[index] = name.trim();
@@ -80,25 +75,63 @@ app.post('/pick', async (req, res) => {
   }
 });
 
-// Get group results
-app.get('/groups', async (req, res) => {
+// SECRET ADMIN MASTER DASHBOARD (Only you can see all 24 boxes, who picked what, and teams)
+app.get('/admin/dashboard', async (req, res) => {
   try {
     const game = await getGameState();
-    const rama = [];
-    const krishna = [];
-    game.picks.forEach((name, i) => {
-      if (name) {
-        if (game.words[i] === 'രാമ') rama.push(name);
-        else krishna.push(name);
-      }
-    });
-    res.json({ rama, krishna });
+    let html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+          <meta charset="UTF-8">
+          <title>Admin Master Dashboard</title>
+          <style>
+              body { font-family: Arial, sans-serif; background: #111; color: #fff; padding: 20px; }
+              h1 { color: #f39c12; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #222; }
+              th, td { border: 1px solid #444; padding: 12px; text-align: left; }
+              th { background: #333; color: #f1c40f; }
+              .rama { color: #3498db; font-weight: bold; }
+              .krishna { color: #e74c3c; font-weight: bold; }
+              .btn { background: #e74c3c; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; font-size: 16px; margin-top: 20px; }
+          </style>
+      </head>
+      <body>
+          <h1>🔒 Master Admin Dashboard (Private View)</h1>
+          <p>Total Picked: ${game.picks.filter(p => p !== null).length} / 24</p>
+          <a href="/admin/ibuildthisformom" onclick="return confirm('Are you sure you want to reset everything and reshuffle?');"><button class="btn">Reset & Reshuffle All Boxes</button></a>
+          <table>
+              <tr>
+                  <th>Box #</th>
+                  <th>Assigned Word (Secret)</th>
+                  <th>Picked By Name</th>
+              </tr>
+    `;
+
+    for (let i = 0; i < 24; i++) {
+      const wordClass = game.words[i] === 'രാമ' ? 'rama' : 'krishna';
+      const pickStatus = game.picks[i] ? `<span style="color:#2ecc71;">${game.picks[i]}</span>` : `<span style="color:#777;">[Available]</span>`;
+      html += `
+        <tr>
+            <td>Box ${i + 1}</td>
+            <td class="${wordClass}">${game.words[i]}</td>
+            <td>${pickStatus}</td>
+        </tr>
+      `;
+    }
+
+    html += `
+          </table>
+      </body>
+      </html>
+    `;
+    res.send(html);
   } catch (err) {
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).send('Error loading dashboard');
   }
 });
 
-
+// Secret Admin Reset Endpoint
 app.get('/admin/ibuildthisformom', async (req, res) => {
   try {
     const newWords = generateRandomizedWords();
@@ -110,9 +143,9 @@ app.get('/admin/ibuildthisformom', async (req, res) => {
       { upsert: true }
     );
 
-    res.send('Reset done. DB updated with fresh cryptographic random shuffle.');
+    res.send('Reset done! Fresh crypto-random shuffle generated. <a href="/admin/dashboard">Go to Admin Dashboard</a>');
   } catch (err) {
-    res.status(500).send('Reset failed due to database error.');
+    res.status(500).send('Reset failed.');
   }
 });
 
