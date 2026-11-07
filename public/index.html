@@ -5,19 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ഗ്രൂപ്പ് തിരഞ്ഞെടുപ്പ് (Group Picker)</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; text-align: center; color: #333; }
-        h1 { color: #2c3e50; font-size: 24px; margin-bottom: 5px; }
-        p.subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
-        #setup-container { background: #fff; padding: 20px; border-radius: 10px; max-width: 400px; margin: 0 auto 20px auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        input[type="text"] { width: 80%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; }
-        button { background: #27ae60; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; }
+        body { font-family: Arial, sans-serif; background: #fdfbf7; margin: 0; padding: 20px; text-align: center; color: #2c3e50; }
+        h1 { color: #8e44ad; font-size: 26px; margin-bottom: 5px; }
+        p.subtitle { color: #555; font-size: 16px; margin-bottom: 20px; }
+        #setup-container { background: #fff; padding: 20px; border-radius: 12px; max-width: 400px; margin: 0 auto 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid #f39c12; }
+        input[type="text"] { width: 85%; padding: 14px; font-size: 18px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 12px; text-align: center; }
+        button { background: #27ae60; color: white; border: none; padding: 14px 24px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         button:hover { background: #219653; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 450px; margin: 0 auto; }
-        .box { background: #fff; border: 2px solid #3498db; border-radius: 8px; padding: 20px 0; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .box:hover:not(.taken) { background: #ebf5fb; }
-        .box.taken { background: #bdc3c7; border-color: #95a5a6; color: #7f8c8d; cursor: not-allowed; }
-        #result-modal { display: none; margin-top: 20px; background: #fff; padding: 20px; border-radius: 10px; max-width: 400px; margin-left: auto; margin-right: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-        .team-name { font-size: 32px; font-weight: bold; margin: 10px 0; color: #e74c3c; }
+        
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 480px; margin: 0 auto; }
+        
+        /* Unpicked Boxes: Bright, inviting gold/cream */
+        .box { background: #fff9c4; border: 3px solid #f39c12; border-radius: 12px; padding: 24px 0; font-size: 24px; font-weight: bold; cursor: pointer; color: #d35400; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.08); }
+        .box:hover:not(.taken) { background: #fff59d; transform: scale(1.03); }
+        
+        /* Picked/Taken Boxes: Extremely high contrast dark grey/red X so it's impossible to mistake */
+        .box.taken { background: #34495e; border: 3px solid #2c3e50; color: #ecf0f1; cursor: not-allowed; box-shadow: none; opacity: 0.85; }
+
+        #result-modal { display: none; margin-top: 20px; background: #fff; padding: 25px; border-radius: 12px; max-width: 400px; margin-left: auto; margin-right: auto; box-shadow: 0 6px 15px rgba(0,0,0,0.2); border: 3px solid #8e44ad; }
+        .team-name { font-size: 38px; font-weight: bold; margin: 15px 0; color: #c0392b; }
     </style>
 </head>
 <body>
@@ -31,8 +37,8 @@
             <br>
             <button onclick="saveName()">തുടരുക (Continue)</button>
         </div>
-        <div id="welcome-msg" style="display:none; font-weight:bold; color: #27ae60;">
-             സ്വാഗതം, <span id="display-name"></span>! താഴെ ഒരു പെട്ടി തിരഞ്ഞെടുക്കുക.
+        <div id="welcome-msg" style="display:none; font-weight:bold; color: #27ae60; font-size: 18px;">
+             സ്വാഗതം, <span id="display-name"></span>!<br>താഴെ ഒരു പെട്ടി തിരഞ്ഞെടുക്കുക.
         </div>
     </div>
 
@@ -41,7 +47,7 @@
     <div id="result-modal">
         <h3>നിങ്ങൾക്ക് ലഭിച്ച ഗ്രൂപ്പ്:</h3>
         <div class="team-name" id="assigned-word"></div>
-        <p>ഈ വിവരം രേഖപ്പെടുത്തിക്കഴിഞ്ഞു.</p>
+        <p style="font-size: 16px; color: #555;">ഈ വിവരം രേഖപ്പെടുത്തിക്കഴിഞ്ഞു.</p>
     </div>
 
 <script>
@@ -64,9 +70,12 @@
         }
         myName = input;
         localStorage.setItem('picker_username', myName);
+        // Clear old session lock on name update so testing is smooth
+        localStorage.removeItem('picker_done');
         document.getElementById('name-box').style.display = 'none';
         document.getElementById('welcome-msg').style.display = 'block';
         document.getElementById('display-name').innerText = myName;
+        loadState();
     }
 
     async function loadState() {
@@ -83,21 +92,20 @@
         const grid = document.getElementById('box-grid');
         grid.innerHTML = '';
         
-        // Check if current user already picked a box in this session
         const userHasPicked = localStorage.getItem('picker_done');
 
         for (let i = 0; i < 24; i++) {
             const box = document.createElement('div');
             box.className = 'box';
-            box.innerText = i + 1;
 
             if (takenArray[i]) {
                 box.classList.add('taken');
-                box.innerText = '✓';
+                box.innerHTML = `<span style="font-size: 14px; display:block; color:#95a5a6;">എടുത്തു</span><strong>#${i+1}</strong><br><span style="font-size: 12px; color:#e74c3c;">Locked</span>`;
             } else if (userHasPicked) {
-                // If this device already picked, gray out remaining boxes to prevent multi-picking
                 box.classList.add('taken');
+                box.innerText = i + 1;
             } else {
+                box.innerText = i + 1;
                 box.onclick = () => pickBox(i);
             }
             grid.appendChild(box);
