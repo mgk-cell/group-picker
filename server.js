@@ -16,7 +16,8 @@ mongoose.connect(MONGO_URI)
 const GameSchema = new mongoose.Schema({
   id: { type: String, default: 'active_game' },
   words: [String],
-  picks: [mongoose.Schema.Types.Mixed]
+  picks: [mongoose.Schema.Types.Mixed],
+  resetVersion: { type: Number, default: 1 }
 });
 
 const Game = mongoose.model('Game', GameSchema);
@@ -36,26 +37,32 @@ async function getGameState() {
     game = await Game.create({
       id: 'active_game',
       words: generateRandomizedWords(),
-      picks: new Array(24).fill(null)
+      picks: new Array(24).fill(null),
+      resetVersion: 1
     });
   }
   return game;
 }
 
-// Public state for players
+// Public state including resetVersion so clients know to clear cache
 app.get('/state', async (req, res) => {
   try {
     const game = await getGameState();
     const taken = game.picks.map(p => p !== null);
     const ramaCount = game.picks.filter((p, i) => p && game.words[i] === 'രാമ').length;
     const krishnaCount = game.picks.filter((p, i) => p && game.words[i] === 'കൃഷ്ണ').length;
-    res.json({ taken, ramaCount, krishnaCount, total: game.picks.filter(p => p !== null).length });
+    res.json({ 
+      taken, 
+      ramaCount, 
+      krishnaCount, 
+      total: game.picks.filter(p => p !== null).length,
+      resetVersion: game.resetVersion || 1
+    });
   } catch (err) {
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-// Pick a box
 app.post('/pick', async (req, res) => {
   try {
     const { index, name } = req.body;
@@ -75,7 +82,6 @@ app.post('/pick', async (req, res) => {
   }
 });
 
-// SECRET ADMIN MASTER DASHBOARD (Only you can see all 24 boxes, who picked what, and teams)
 app.get('/admin/dashboard', async (req, res) => {
   try {
     const game = await getGameState();
@@ -99,11 +105,11 @@ app.get('/admin/dashboard', async (req, res) => {
       <body>
           <h1>🔒 Master Admin Dashboard (Private View)</h1>
           <p>Total Picked: ${game.picks.filter(p => p !== null).length} / 24</p>
-          <a href="/admin/ibuildthisformom" onclick="return confirm('Are you sure you want to reset everything and reshuffle?');"><button class="btn">Reset & Reshuffle All Boxes</button></a>
+          <a href="/admin/ibuildthisformom" onclick="return confirm('Are you sure you want to reset everything and force-wipe all user names and sessions?');"><button class="btn">Full Hard Reset & Reshuffle</button></a>
           <table>
               <tr>
                   <th>Box #</th>
-                  <th>Assigned Word (Secret)</th>
+                  <th>Assigned Word</th>
                   <th>Picked By Name</th>
               </tr>
     `;
@@ -131,19 +137,22 @@ app.get('/admin/dashboard', async (req, res) => {
   }
 });
 
-// Secret Admin Reset Endpoint
+// SECRET ADMIN HARD RESET (Bumps version to force-wipe all client localStorage caches)
 app.get('/admin/ibuildthisformom', async (req, res) => {
   try {
     const newWords = generateRandomizedWords();
     const newPicks = new Array(24).fill(null);
+    
+    const game = await Game.findOne({ id: 'active_game' });
+    const currentVersion = game ? (game.resetVersion || 1) : 1;
 
     await Game.findOneAndUpdate(
       { id: 'active_game' },
-      { words: newWords, picks: newPicks },
+      { words: newWords, picks: newPicks, resetVersion: currentVersion + 1 },
       { upsert: true }
     );
 
-    res.send('Reset done! Fresh crypto-random shuffle generated. <a href="/admin/dashboard">Go to Admin Dashboard</a>');
+    res.send('Hard reset complete! All data wiped, fresh shuffle generated, and client sessions invalidated. <a href="/admin/dashboard">Go to Admin Dashboard</a>');
   } catch (err) {
     res.status(500).send('Reset failed.');
   }
